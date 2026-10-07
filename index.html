@@ -1,305 +1,302 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focused Writer</title>
-    
-    <!-- Import requested fonts from Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Crimson+Pro&family=Crimson+Text&family=IBM+Plex+Sans&family=Lora&family=Nunito+Sans&family=Open+Sans&family=Roboto&family=Source+Sans+3&display=swap" rel="stylesheet">
-    
-    <style>
-        /* --- THEME VARIABLES --- */
-        :root {
-            --bg-color: #f4f5f7;
-            --text-color: #202124;
-            --editor-bg: #ffffff;
-            --border-color: #c7c7c7;
-            --dock-bg: #ffffff;
-            --btn-bg: #f1f3f4;
-            --btn-hover: #e8eaed;
-            --btn-text: #202124;
-        }
-
-        body.dark-mode {
-            --bg-color: #121212;
-            --text-color: #e8eaed;
-            --editor-bg: #1e1e1e;
-            --border-color: #5f6368;
-            --dock-bg: #1e1e1e;
-            --btn-bg: #3c4043;
-            --btn-hover: #4a4d51;
-            --btn-text: #e8eaed;
-        }
-
-        body {
-            font-family: 'Nunito Sans', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh; /* Locks the page height */
-            overflow: hidden; /* Prevents the main window from scrolling */
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        /* --- THE DOCK --- */
-        #dock {
-            margin-top: 20px;
-            flex-shrink: 0; /* Prevents the dock from compressing */
-            width: 90%;
-            max-width: 600px;
-            background-color: var(--dock-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            z-index: 100;
-            box-sizing: border-box;
-            transition: all 0.3s;
-        }
-
-        .toolbar-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        button, select {
-            background-color: var(--btn-bg);
-            color: var(--btn-text);
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: inherit;
-            transition: background-color 0.2s;
-            outline: none;
-        }
-
-        button:hover, select:hover {
-            background-color: var(--btn-hover);
-        }
-
-        /* --- WRITING AREA --- */
-        #editor-container {
-            width: 90%;
-            max-width: 600px;
-            margin-top: 20px;
-            margin-bottom: 20px;
-            flex-grow: 1; /* Takes up all remaining vertical space */
-            overflow-y: auto; /* Moves the scrollbar inside this box */
-            background-color: var(--editor-bg);
-            border: 2px solid var(--border-color);
-            border-radius: 16px;
-            box-sizing: border-box;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            transition: all 0.3s;
-        }
-
-        /* Optional: Style the scrollbar to look modern */
-        #editor-container::-webkit-scrollbar {
-            width: 10px;
-        }
-        #editor-container::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #editor-container::-webkit-scrollbar-thumb {
-            background-color: var(--border-color);
-            border-radius: 10px;
-            border: 3px solid var(--editor-bg);
-        }
-
-        #editor {
-            padding: 40px;
-            padding-bottom: 60vh; /* Keeps the text off the bottom of the screen */
-            min-height: 100%;
-            outline: none;
-            line-height: 1.7;
-            font-size: 18px; /* Default size */
-            box-sizing: border-box;
-        }
-
-        #editor[data-empty="true"]::before {
-            content: "Drafting the next chapter about Ryan...";
-            color: #888;
-            pointer-events: none;
-            display: block;
-        }
-
-        /* --- WORD COUNTER --- */
-        #word-counter {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--dock-bg);
-            color: var(--text-color);
-            border: 2px solid var(--border-color);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            z-index: 100;
-            transition: all 0.3s;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'; connect-src 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Focused Writer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat&family=Crimson+Pro&family=Crimson+Text&family=IBM+Plex+Sans&family=Lora&family=Nunito+Sans&family=Open+Sans&family=Roboto&family=Source+Sans+3&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f5f7; --text: #202124; --panel: #ffffff; --border: #c7c7c7;
+  --btn: #f1f3f4; --btn-hover: #e8eaed; --muted: #888;
+  --font: 'Nunito Sans', sans-serif; --size: 18px;
+}
+body.dark {
+  --bg: #121212; --text: #e8eaed; --panel: #1e1e1e; --border: #5f6368;
+  --btn: #3c4043; --btn-hover: #4a4d51; --muted: #888;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--text); font-family: 'Nunito Sans', sans-serif;
+  display: flex; flex-direction: column; align-items: center; overflow: hidden;
+}
+#dock {
+  margin-top: 20px; flex-shrink: 0; width: 92%; max-width: 760px;
+  background: var(--panel); border: 2px solid var(--border); border-radius: 12px;
+  padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: space-between; align-items: center;
+}
+.group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+button, select {
+  background: var(--btn); color: var(--text); border: none; padding: 8px 12px;
+  border-radius: 6px; cursor: pointer; font: 600 14px 'Nunito Sans', sans-serif;
+}
+button:hover, select:hover { background: var(--btn-hover); }
+button:focus-visible, select:focus-visible { outline: 2px solid #4a8cf7; outline-offset: 1px; }
+button[aria-pressed="true"] { outline: 2px solid var(--border); }
+#wrap {
+  width: 92%; max-width: 760px; margin: 16px 0 20px; flex: 1 1 auto; min-height: 0;
+  background: var(--panel); border: 2px solid var(--border); border-radius: 16px; overflow: hidden;
+}
+#editor {
+  display: block; width: 100%; height: 100%; border: 0; outline: 0; resize: none;
+  background: transparent; color: var(--text); font-family: var(--font); font-size: var(--size);
+  line-height: 1.7; padding: 40px 40px 50vh; white-space: pre-wrap; overflow-wrap: break-word;
+  tab-size: 4;
+}
+#editor::placeholder { color: var(--muted); }
+#status {
+  position: fixed; bottom: 14px; right: 14px; background: var(--panel); color: var(--text);
+  border: 2px solid var(--border); padding: 6px 14px; border-radius: 20px;
+  font: 600 13px 'Nunito Sans', sans-serif; pointer-events: none;
+}
+@media (max-width: 520px) { #editor { padding: 24px 20px 50vh; } }
+</style>
 </head>
 <body>
 
-    <!-- THE DOCK -->
-    <div id="dock">
-        <div class="toolbar-group">
-            <button onclick="formatText('bold')" title="Bold">B</button>
-            <button onclick="formatText('italic')" title="Italic">I</button>
-            <button onclick="formatText('underline')" title="Underline">U</button>
-            
-            <select id="font-selector" onchange="changeFont(this)" title="Choose Font">
-                <option value="'Nunito Sans', sans-serif">Nunito Sans</option>
-                <option value="'Open Sans', sans-serif">Open Sans</option>
-                <option value="'Roboto', sans-serif">Roboto</option>
-                <option value="Arial, sans-serif">Arial</option>
-                <option value="'IBM Plex Sans', sans-serif">IBM Plex Sans</option>
-                <option value="'Crimson Pro', serif">Crimson Pro</option>
-                <option value="'Crimson Text', serif">Crimson Text</option>
-                <option value="'Lora', serif">Lora</option>
-                <option value="'Source Sans 3', sans-serif">Source Sans 3</option>
-                <option value="'Caveat', cursive">Caveat</option>
-                <option value="Calibri, sans-serif">Calibri</option>
-            </select>
+<div id="dock">
+  <div class="group">
+    <select id="font" title="Font" aria-label="Font">
+      <option value="'Nunito Sans', sans-serif">Nunito Sans</option>
+      <option value="'Open Sans', sans-serif">Open Sans</option>
+      <option value="'Roboto', sans-serif">Roboto</option>
+      <option value="Arial, sans-serif">Arial</option>
+      <option value="'IBM Plex Sans', sans-serif">IBM Plex Sans</option>
+      <option value="'Crimson Pro', serif">Crimson Pro</option>
+      <option value="'Crimson Text', serif">Crimson Text</option>
+      <option value="'Lora', serif">Lora</option>
+      <option value="'Source Sans 3', sans-serif">Source Sans 3</option>
+      <option value="'Caveat', cursive">Caveat</option>
+      <option value="Calibri, sans-serif">Calibri</option>
+    </select>
+    <select id="size" title="Font size" aria-label="Font size">
+      <option value="14px">14</option><option value="16px">16</option>
+      <option value="18px">18</option><option value="20px">20</option>
+      <option value="22px">22</option><option value="24px">24</option>
+      <option value="28px">28</option>
+    </select>
+    <button id="spell" aria-pressed="false" title="Spellcheck can slow down very long drafts">Spellcheck</button>
+  </div>
+  <div class="group">
+    <button id="download" title="Download as text file (Ctrl/Cmd+S)">Download .txt</button>
+    <button id="theme">Dark Mode</button>
+  </div>
+</div>
 
-            <select id="size-selector" onchange="changeFontSize(this)" title="Font Size">
-                <option value="14px">14</option>
-                <option value="16px">16</option>
-                <option value="18px" selected>18</option>
-                <option value="20px">20</option>
-                <option value="22px">22</option>
-                <option value="24px">24</option>
-                <option value="28px">28</option>
-            </select>
-        </div>
-        <div class="toolbar-group">
-            <button onclick="downloadTXT()" title="Download as Text File">Download .txt</button>
-            <button onclick="toggleDarkMode()">Dark Mode</button>
-        </div>
-    </div>
+<div id="wrap">
+  <textarea id="editor" placeholder="Drafting the next chapter about Ryan..." spellcheck="false"
+    autocomplete="off" autocapitalize="sentences" aria-label="Writing area"></textarea>
+</div>
+<div id="status" role="status" aria-live="off">0 words</div>
 
-    <!-- WRITING AREA -->
-    <div id="editor-container">
-        <div id="editor" contenteditable="true"></div>
-    </div>
+<script>
+(function () {
+  'use strict';
 
-    <!-- FIXED WORD COUNTER -->
-    <div id="word-counter">0 words</div>
+  var editor = document.getElementById('editor');
+  var statusEl = document.getElementById('status');
+  var fontSel = document.getElementById('font');
+  var sizeSel = document.getElementById('size');
+  var spellBtn = document.getElementById('spell');
+  var root = document.documentElement;
 
-    <!-- APP LOGIC -->
-    <script>
-        const editor = document.getElementById('editor');
-        const wordCounter = document.getElementById('word-counter');
-        const fontSelector = document.getElementById('font-selector');
-        const sizeSelector = document.getElementById('size-selector');
+  // ---------- small settings (localStorage is fine for tiny values) ----------
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
-        // Text Formatting
-        function formatText(command) {
-            document.execCommand(command, false, null);
-            editor.focus();
-        }
+  // ---------- settings ----------
+  var dark = lsGet('writer-dark-mode');
+  if (dark === null) dark = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'true' : 'false';
+  document.body.classList.toggle('dark', dark === 'true');
+  document.getElementById('theme').onclick = function () {
+    var on = document.body.classList.toggle('dark');
+    lsSet('writer-dark-mode', on);
+  };
 
-        // Change Font Family
-        function changeFont(selectElement) {
-            document.body.style.fontFamily = selectElement.value;
-            localStorage.setItem('writer-font', selectElement.value);
-            editor.focus();
-        }
+  function applyFont(v) {
+    for (var i = 0; i < fontSel.options.length; i++) {
+      if (fontSel.options[i].value === v) { fontSel.value = v; root.style.setProperty('--font', v); return; }
+    }
+  }
+  function applySize(v) {
+    for (var i = 0; i < sizeSel.options.length; i++) {
+      if (sizeSel.options[i].value === v) { sizeSel.value = v; root.style.setProperty('--size', v); return; }
+    }
+  }
+  applyFont(lsGet('writer-font') || fontSel.value);
+  applySize(lsGet('writer-font-size') || '18px');
+  fontSel.onchange = function () { applyFont(fontSel.value); lsSet('writer-font', fontSel.value); editor.focus(); };
+  sizeSel.onchange = function () { applySize(sizeSel.value); lsSet('writer-font-size', sizeSel.value); editor.focus(); };
 
-        // Change Font Size
-        function changeFontSize(selectElement) {
-            editor.style.fontSize = selectElement.value;
-            localStorage.setItem('writer-font-size', selectElement.value);
-            editor.focus();
-        }
+  function setSpell(on) {
+    editor.spellcheck = on;
+    spellBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    lsSet('writer-spellcheck', on);
+  }
+  setSpell(lsGet('writer-spellcheck') === 'true');
+  spellBtn.onclick = function () { setSpell(editor.spellcheck !== true); editor.focus(); };
 
-        // Download as TXT
-        function downloadTXT() {
-            const textContent = editor.innerText || "";
-            const blob = new Blob([textContent], { type: "text/plain" });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "draft.txt";
-            document.body.appendChild(a);
-            a.click();
-            
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+  // ---------- storage: IndexedDB (async, large quota) with localStorage backup ----------
+  var DB_NAME = 'focused-writer', STORE = 'kv', KEY = 'draft';
+  var dbPromise = new Promise(function (resolve) {
+    try {
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function () { req.result.createObjectStore(STORE); };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { resolve(null); };
+      req.onblocked = function () { resolve(null); };
+    } catch (e) { resolve(null); }
+  });
 
-        // Toggle Dark Mode
-        function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('writer-dark-mode', isDark);
-        }
+  function idbGet() {
+    return dbPromise.then(function (db) {
+      if (!db) return null;
+      return new Promise(function (resolve) {
+        try {
+          var r = db.transaction(STORE, 'readonly').objectStore(STORE).get(KEY);
+          r.onsuccess = function () { resolve(r.result || null); };
+          r.onerror = function () { resolve(null); };
+        } catch (e) { resolve(null); }
+      });
+    });
+  }
+  function idbSet(obj) {
+    return dbPromise.then(function (db) {
+      if (!db) return false;
+      return new Promise(function (resolve) {
+        try {
+          var tx = db.transaction(STORE, 'readwrite');
+          tx.objectStore(STORE).put(obj, KEY);
+          tx.oncomplete = function () { resolve(true); };
+          tx.onerror = tx.onabort = function () { resolve(false); };
+        } catch (e) { resolve(false); }
+      });
+    });
+  }
 
-        // Update Word Count
-        function updateWordCount() {
-            const text = editor.innerText || "";
-            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-            const count = words.length;
-            wordCounter.innerText = `${count} word${count === 1 ? '' : 's'}`;
-        }
+  // Old version stored HTML in localStorage. Convert it to plain text once, without running any of it.
+  function legacyToText(html) {
+    var s = html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(div|p|h[1-6]|li)>/gi, '\n')
+      .replace(/<(div|p|h[1-6]|li)[^>]*>/gi, '');
+    var doc = new DOMParser().parseFromString(s, 'text/html');
+    return (doc.body.textContent || '').replace(/\u00a0/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  }
 
-        // --- INITIALIZATION ON LOAD ---
+  function loadDraft() {
+    return idbGet().then(function (rec) {
+      var backup = null;
+      try { backup = JSON.parse(lsGet('writer-text-backup')); } catch (e) {}
+      var best = rec;
+      if (backup && typeof backup.text === 'string' && (!best || backup.t > best.t)) best = backup;
+      if (best && typeof best.text === 'string') return best.text;
+      var legacy = lsGet('writer-content');
+      if (legacy) return legacyToText(legacy);
+      return '';
+    });
+  }
 
-        // Load saved theme
-        if (localStorage.getItem('writer-dark-mode') === 'true') {
-            document.body.classList.add('dark-mode');
-        }
+  // ---------- saving: debounced, never on every keystroke ----------
+  var dirty = false, saveTimer = 0, firstDirtyAt = 0, saving = false, loaded = false;
+  var SAVE_IDLE = 600, SAVE_MAX = 5000;
 
-        // Load saved font
-        const savedFont = localStorage.getItem('writer-font');
-        if (savedFont) {
-            document.body.style.fontFamily = savedFont;
-            fontSelector.value = savedFont;
-        }
+  function snapshot() { return { text: editor.value, t: Date.now() }; }
 
-        // Load saved font size
-        const savedFontSize = localStorage.getItem('writer-font-size');
-        if (savedFontSize) {
-            editor.style.fontSize = savedFontSize;
-            sizeSelector.value = savedFontSize;
-        }
+  function flushNow() {
+    if (!loaded || !dirty) return;
+    clearTimeout(saveTimer); saveTimer = 0;
+    var snap = snapshot();
+    dirty = false; firstDirtyAt = 0;
+    // Synchronous backup so closing the tab never loses text.
+    try { localStorage.setItem('writer-text-backup', JSON.stringify(snap)); } catch (e) {}
+    idbSet(snap).then(function (ok) {
+      if (!dirty) setStatusSaved(ok || true);
+    });
+  }
 
-        // Handle placeholder and dynamic updates
-        editor.addEventListener('input', function() {
-            if (this.textContent.trim() === '') {
-                this.setAttribute('data-empty', 'true');
-            } else {
-                this.setAttribute('data-empty', 'false');
-            }
-            
-            localStorage.setItem('writer-content', this.innerHTML);
-            updateWordCount();
-        });
+  function scheduleSave() {
+    dirty = true;
+    var now = Date.now();
+    if (!firstDirtyAt) firstDirtyAt = now;
+    clearTimeout(saveTimer);
+    var wait = Math.min(SAVE_IDLE, Math.max(0, SAVE_MAX - (now - firstDirtyAt)));
+    saveTimer = setTimeout(flushNow, wait);
+  }
 
-        // Load saved content on startup
-        const savedContent = localStorage.getItem('writer-content');
-        if (savedContent) {
-            editor.innerHTML = savedContent;
-            editor.setAttribute('data-empty', 'false');
-            updateWordCount();
-        } else {
-            editor.setAttribute('data-empty', 'true');
-        }
-    </script>
+  // ---------- word count: one pass, no arrays, deferred until idle ----------
+  var wordTimer = 0, savedLabel = true, lastWords = 0;
+  function countWords(s) {
+    var n = 0, inWord = false;
+    for (var i = 0, len = s.length; i < len; i++) {
+      var c = s.charCodeAt(i);
+      var space = c <= 32 || c === 160 || (c >= 0x2000 && c <= 0x200a) || c === 0x2028 || c === 0x2029 || c === 0x3000;
+      if (space) inWord = false;
+      else if (!inWord) { inWord = true; n++; }
+    }
+    return n;
+  }
+  function renderStatus() {
+    statusEl.textContent = lastWords.toLocaleString() + (lastWords === 1 ? ' word' : ' words') + (savedLabel ? '' : ' · unsaved');
+  }
+  function setStatusSaved() { savedLabel = true; renderStatus(); }
+  function scheduleCount() {
+    clearTimeout(wordTimer);
+    wordTimer = setTimeout(function () {
+      lastWords = countWords(editor.value);
+      renderStatus();
+    }, 300);
+  }
+
+  editor.addEventListener('input', function () {
+    savedLabel = false;
+    scheduleSave();
+    scheduleCount();
+  });
+
+  // Save when leaving. visibilitychange is the reliable one on mobile.
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushNow(); });
+  window.addEventListener('pagehide', flushNow);
+
+  // ---------- download ----------
+  function download() {
+    var blob = new Blob([editor.value], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'draft.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  document.getElementById('download').onclick = download;
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); flushNow(); download(); }
+  });
+
+  // ---------- startup ----------
+  editor.disabled = true;
+  loadDraft().then(function (text) {
+    editor.value = text;
+    editor.disabled = false;
+    loaded = true;
+    lastWords = countWords(text);
+    savedLabel = true;
+    renderStatus();
+    editor.focus();
+    editor.setSelectionRange(text.length, text.length);
+    editor.scrollTop = editor.scrollHeight;
+    // If we pulled in an old draft, save it in the new format right away.
+    if (text && !lsGet('writer-text-backup')) { dirty = true; flushNow(); }
+  });
+
+  // Ask the browser not to evict saved drafts under storage pressure.
+  if (navigator.storage && navigator.storage.persist) { try { navigator.storage.persist(); } catch (e) {} }
+})();
+</script>
 </body>
 </html>
