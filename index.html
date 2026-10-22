@@ -36,6 +36,7 @@
   --font: 'Newsreader', Georgia, serif;
   --size: 19px;
   --lh: 1.8;
+  --w: 720px;
   --ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: light;
 }
@@ -86,6 +87,9 @@ select {
   background: transparent; color: var(--text); border: 0; padding: 7px 8px; width: 100%;
   border-radius: 4px; cursor: pointer; font: 500 13.5px var(--ui);
 }
+input[type=range] { width: 100%; margin: 2px 0 0; accent-color: var(--accent); background: transparent; cursor: pointer; }
+input[type=range]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lw { display: flex; justify-content: space-between; }
 button:hover, select:hover { background: var(--hover); }
 button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
@@ -104,10 +108,10 @@ button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent);
   flex: 1 1 auto; min-height: 0; overflow-y: auto;
   scrollbar-width: thin; scrollbar-color: var(--thumb) transparent;
 }
-#stack { position: relative; max-width: 720px; margin: 0 auto; }
+#stack { position: relative; max-width: var(--w); margin: 0 auto; }
 #mirror, #editor {
   font-family: var(--font); font-size: var(--size); line-height: var(--lh);
-  letter-spacing: 0.005em; padding: 48px 28px 50vh; margin: 0; border: 0;
+  letter-spacing: 0.005em; padding: 42vh 28px 50vh; margin: 0; border: 0;
   white-space: pre-wrap; overflow-wrap: break-word; word-break: normal;
   tab-size: 4; font-kerning: normal; text-rendering: auto;
 }
@@ -126,7 +130,7 @@ button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent);
 body.drop #page { outline: 2px dashed var(--accent); outline-offset: -8px; }
 
 @media (max-width: 520px) {
-  #mirror, #editor { padding: 56px 18px 50vh; }
+  #mirror, #editor { padding: 42vh 18px 50vh; }
 }
 </style>
 </head>
@@ -159,6 +163,10 @@ body.drop #page { outline: 2px dashed var(--accent); outline-offset: -8px; }
       <option value="1.8">Normal</option><option value="2">Roomy</option>
       <option value="2.2">Airy</option>
     </select></div>
+  </div>
+  <div class="sec">
+    <div class="lbl lw"><span>Width</span><span id="wval">720px</span></div>
+    <input id="width" type="range" min="480" max="1400" step="20" value="720" aria-label="Writing width" title="Writing width (double-click to reset)">
   </div>
   <div class="sec"><span class="lbl">Format</span>
     <div class="row">
@@ -262,11 +270,23 @@ body.drop #page { outline: 2px dashed var(--accent); outline-offset: -8px; }
       return false;
     }
     if (!apply(lsGet(key))) apply(fallback);
-    sel.onchange = function () { apply(sel.value); lsSet(key, sel.value); editor.focus(); };
+    sel.onchange = function () { apply(sel.value); lsSet(key, sel.value); editor.focus(); requestAnimationFrame(revealCaret); };
   }
   bindSelect(fontSel, 'writer-font', '--font', fontSel.options[0].value);
   bindSelect(sizeSel, 'writer-font-size', '--size', '19px');
   bindSelect(lhSel, 'writer-line-height', '--lh', '1.8');
+
+  var widthEl = $('width'), wval = $('wval');
+  function applyWidth(v) {
+    v = Math.min(1400, Math.max(480, +v || 720));
+    root.style.setProperty('--w', v + 'px');
+    widthEl.value = v; wval.textContent = v + 'px';
+    return v;
+  }
+  applyWidth(lsGet('writer-width'));
+  widthEl.oninput = function () { lsSet('writer-width', applyWidth(widthEl.value)); };
+  widthEl.onchange = function () { editor.focus(); requestAnimationFrame(revealCaret); };
+  widthEl.ondblclick = function () { lsSet('writer-width', applyWidth(720)); };
 
   function setSpell(on) {
     editor.spellcheck = on;
@@ -381,7 +401,7 @@ body.drop #page { outline: 2px dashed var(--accent); outline-offset: -8px; }
     if (rq) return;
     rq = requestAnimationFrame(function () { rq = 0; render(); revealCaret(); });
   }
-  // The textarea never scrolls itself (the page does), so keep the caret in view by hand.
+  // The textarea never scrolls itself (the page does), so this keeps the line you are typing on at a fixed height.
   function revealCaret() {
     if (document.activeElement !== editor) return;
     var idx = editor.selectionEnd, w = document.createTreeWalker(mirror, NodeFilter.SHOW_TEXT);
@@ -397,9 +417,10 @@ body.drop #page { outline: 2px dashed var(--accent); outline-offset: -8px; }
     var rect = r.getClientRects()[0] || r.getBoundingClientRect();
     if (!rect || (!rect.height && !rect.top)) return;
     var pr = page.getBoundingClientRect();
-    if (rect.bottom > pr.bottom - 120) page.scrollTop += rect.bottom - (pr.bottom - 120);
-    else if (rect.top < pr.top + 56) page.scrollTop -= (pr.top + 56) - rect.top;
+    var delta = rect.top - (pr.top + pr.height * 0.42);   // keep the line you are on at 42% down the screen
+    if (Math.abs(delta) > 10) page.scrollTop += delta;
   }
+  editor.addEventListener('keydown', function (e) { if (/^(Arrow|Page|Home|End)/.test(e.key)) requestAnimationFrame(revealCaret); });
   editor.addEventListener('keyup', function (e) { if (/^(Arrow|Page|Home|End)/.test(e.key)) revealCaret(); });
   // Another tab saving over the same draft is the one real way to lose text, so say so.
   window.addEventListener('storage', function (e) {
@@ -477,7 +498,6 @@ body.drop #page { outline: 2px dashed var(--accent); outline-offset: -8px; }
       if (editor.value.trim() &&
           !confirm('Replace your current draft with "' + file.name + '"?\n\nCtrl/Cmd+Z right after should bring it back, but downloading a copy first is safer.')) return;
       replaceRange(0, editor.value.length, t);   // goes through the editor's undo history
-      requestAnimationFrame(function () { page.scrollTop = page.scrollHeight; });
     }).catch(function () { alert('Could not read that file.'); });
   }
   $('open').onclick = function () { fileIn.click(); };
@@ -524,7 +544,8 @@ body.drop #page { outline: 2px dashed var(--accent); outline-offset: -8px; }
     refreshDocTitle();
     editor.focus();
     editor.setSelectionRange(text.length, text.length);
-    page.scrollTop = page.scrollHeight;
+    revealCaret();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(revealCaret);
     if (text && !lsGet('writer-text-backup')) { dirty = true; flushNow(); }
   });
 
