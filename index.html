@@ -7,13 +7,15 @@
 <meta name="referrer" content="no-referrer">
 <title>Focused Writer</title>
 
-<!-- Set the theme before first paint so dark mode never flashes white -->
 <script>
 (function () {
   try {
     var d = localStorage.getItem('writer-dark-mode');
     if (d === null) d = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'true' : 'false';
     if (d === 'true') document.documentElement.classList.add('dark');
+    var sd = localStorage.getItem('writer-side');
+    if (sd === null) sd = window.innerWidth >= 900 ? 'open' : 'closed';
+    if (sd === 'closed') document.documentElement.classList.add('nside');
   } catch (e) {}
 })();
 </script>
@@ -22,119 +24,120 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Courier+Prime&family=Crimson+Pro&family=Inter:wght@400;500;600&family=Literata&family=Lora&family=Newsreader&family=Source+Serif+4&display=swap" rel="stylesheet">
 <style>
-/* Light: pale mist with a quiet green-teal accent. Dark: deep ink with the same hue, softened. */
 :root {
-  --bg: #e8edea;
-  --panel: #f6f8f5;
-  --text: #25302c;
-  --muted: #808d88;
-  --border: #cdd7d1;
-  --btn: #e3eae6;
-  --btn-hover: #d6e0da;
-  --accent: #3d7b6b;
-  --select: rgba(61, 123, 107, 0.22);
-  --thumb: #bac7c0;
-  --font: 'Literata', Georgia, serif;
+  --bg: #faf9f5;
+  --text: #1f1e1d;
+  --muted: #8a877e;
+  --border: #e4e1d7;
+  --hover: #eeece3;
+  --accent: #b5573a;
+  --select: rgba(181, 87, 58, 0.2);
+  --thumb: #d3cfc2;
+  --font: 'Newsreader', Georgia, serif;
   --size: 19px;
+  --lh: 1.8;
   --ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: light;
 }
 html.dark {
-  --bg: #0e1215;
-  --panel: #151a1e;
-  --text: #d5dcd9;
-  --muted: #6c7875;
-  --border: #252f35;
-  --btn: #1e262b;
-  --btn-hover: #28333a;
-  --accent: #85bfad;
-  --select: rgba(133, 191, 173, 0.25);
-  --thumb: #34424b;
+  --bg: #262624;
+  --text: #e6e4da;
+  --muted: #8f8d85;
+  --border: #3a3936;
+  --hover: #33322f;
+  --accent: #e29776;
+  --select: rgba(226, 151, 118, 0.26);
+  --thumb: #46453f;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
   background: var(--bg); color: var(--text); font-family: var(--ui);
-  display: flex; flex-direction: column; align-items: center; overflow: hidden;
+  display: flex; overflow: hidden;
 }
 
-/* ---------- toolbar ---------- */
-#dock {
-  margin-top: 18px; flex-shrink: 0; width: 92%; max-width: 760px;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-  padding: 8px 10px; display: flex; flex-wrap: wrap; gap: 8px;
-  justify-content: space-between; align-items: center;
+/* side menu: part of the page, pushes the writing area instead of covering it */
+:root { --sw: min(260px, 80vw); }
+body { flex-direction: row; }
+#side {
+  flex: 0 0 auto; width: var(--sw); overflow: hidden;
+  border-right: 1px solid var(--border); transition: width .2s ease;
 }
-.group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-button, select {
-  background: var(--btn); color: var(--text); border: 1px solid transparent; padding: 7px 11px;
-  border-radius: 8px; cursor: pointer; font: 500 13.5px var(--ui);
-  transition: background .15s ease;
-}
-button:hover, select:hover { background: var(--btn-hover); }
-button:focus-visible, select:focus-visible, #title:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
-#download { background: var(--accent); color: var(--panel); font-weight: 600; }
-#download:hover { background: var(--accent); filter: brightness(1.08); }
-
-/* ---------- title ---------- */
-#titlebar { width: 92%; max-width: 760px; flex-shrink: 0; margin-top: 18px; padding: 0 6px; }
-#title {
-  display: block; width: 100%; background: transparent; color: var(--text);
-  border: 0; border-bottom: 1px solid var(--border); border-radius: 0;
-  padding: 6px 0 10px; font-family: var(--font); font-size: 1.6rem; font-weight: 500;
-  line-height: 1.3; outline: 0; transition: border-color .15s ease;
-}
-#title:focus { border-bottom-color: var(--accent); }
-#title:focus-visible { outline: 0; }
-#title::placeholder { color: var(--muted); opacity: 1; font-weight: 400; }
-
-/* ---------- writing area ---------- */
-#wrap {
-  width: 92%; max-width: 760px; margin: 14px 0 18px; flex: 1 1 auto; min-height: 0;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
-}
-#editor {
-  display: block; width: 100%; height: 100%; border: 0; outline: 0; resize: none;
-  background: transparent; color: var(--text); caret-color: var(--accent);
-  font-family: var(--font); font-size: var(--size);
-  line-height: 1.8; letter-spacing: 0.005em;
-  padding: 36px 44px 50vh; white-space: pre-wrap; overflow-wrap: break-word;
-  tab-size: 4;
+#side-in {
+  width: var(--sw); height: 100%; overflow-y: auto; padding: 56px 12px 16px;
+  display: flex; flex-direction: column; gap: 20px;
   scrollbar-width: thin; scrollbar-color: var(--thumb) transparent;
 }
-#editor::selection, #title::selection { background: var(--select); }
-#editor::placeholder { color: var(--muted); opacity: 1; }
-#editor::-webkit-scrollbar { width: 12px; }
-#editor::-webkit-scrollbar-track { background: transparent; }
-#editor::-webkit-scrollbar-thumb {
-  background: var(--thumb); border-radius: 8px; border: 3px solid transparent; background-clip: content-box;
+html.nside #side {
+  width: 0; border-right-color: transparent; visibility: hidden;
+  transition: width .2s ease, visibility 0s .2s, border-color 0s .2s;
 }
-#editor::-webkit-scrollbar-thumb:hover { background: var(--muted); background-clip: content-box; border: 3px solid transparent; }
+.sec { display: flex; flex-direction: column; gap: 4px; }
+.lbl { font: 500 12px var(--ui); color: var(--muted); padding: 0 8px 3px; }
+.row { display: flex; gap: 4px; }
+.row > * { flex: 1; min-width: 0; }
+button {
+  background: transparent; color: var(--text); border: 1px solid var(--border);
+  padding: 7px 10px; border-radius: 4px; cursor: pointer;
+  font: 500 13px var(--ui); text-align: center; white-space: nowrap;
+}
+select {
+  background: transparent; color: var(--text); border: 0; padding: 7px 8px; width: 100%;
+  border-radius: 4px; cursor: pointer; font: 500 13.5px var(--ui);
+}
+button:hover, select:hover { background: var(--hover); }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+#download { color: var(--accent); border-color: var(--accent); }
+#status { margin-top: auto; padding: 0 8px; color: var(--muted); font: 400 12.5px/1.5 var(--ui); white-space: pre-line; }
+#main { flex: 1 1 auto; min-width: 0; position: relative; display: flex; flex-direction: column; }
+/* fixed to the window, so it never moves when the menu opens or closes */
+#menu {
+  position: fixed; top: 8px; left: 8px; z-index: 5; width: 34px; height: 34px;
+  padding: 0; display: grid; place-items: center; background: var(--bg); border-color: transparent;
+}
+@media (prefers-reduced-motion: reduce) { #side, html.nside #side { transition: none; } }
 
-#status {
-  position: fixed; bottom: 14px; right: 14px; background: var(--panel); color: var(--muted);
-  border: 1px solid var(--border); padding: 5px 13px; border-radius: 20px;
-  font: 500 12.5px var(--ui); pointer-events: none;
+/* page: the writing area is the page itself */
+#page {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--thumb) transparent;
 }
+#stack { position: relative; max-width: 720px; margin: 0 auto; }
+#mirror, #editor {
+  font-family: var(--font); font-size: var(--size); line-height: var(--lh);
+  letter-spacing: 0.005em; padding: 48px 28px 50vh; margin: 0; border: 0;
+  white-space: pre-wrap; overflow-wrap: break-word; word-break: normal;
+  tab-size: 4; font-kerning: normal; text-rendering: auto;
+}
+/* The mirror paints the colors; the textarea on top takes the typing. Same font and size, so they line up exactly. */
+#mirror { color: var(--text); pointer-events: none; min-height: 100vh; }
+#editor {
+  position: absolute; inset: 0; width: 100%; height: 100%; resize: none; outline: 0;
+  overflow: hidden; background: transparent; color: transparent;
+  -webkit-text-fill-color: transparent; caret-color: var(--text);
+}
+#editor::selection { background: var(--select); }
+#editor::placeholder { color: var(--muted); opacity: 1; -webkit-text-fill-color: var(--muted); }
+.h { color: var(--accent); }
+.m { color: var(--muted); }
+.h .m { opacity: .7; }
+body.drop #page { outline: 2px dashed var(--accent); outline-offset: -8px; }
+
 @media (max-width: 520px) {
-  #editor { padding: 24px 20px 50vh; }
-  #title { font-size: 1.35rem; }
-}
-@media (prefers-reduced-motion: reduce) {
-  * { transition: none !important; }
+  #mirror, #editor { padding: 56px 18px 50vh; }
 }
 </style>
 </head>
 <body>
 
-<div id="dock">
-  <div class="group">
+<aside id="side" aria-label="Menu"><div id="side-in">
+  <div class="sec"><span class="lbl">Text</span>
     <select id="font" title="Font" aria-label="Font">
       <optgroup label="Serif">
-        <option value="'Literata', Georgia, serif">Literata</option>
         <option value="'Newsreader', Georgia, serif">Newsreader</option>
+        <option value="'Literata', Georgia, serif">Literata</option>
         <option value="'Source Serif 4', Georgia, serif">Source Serif</option>
         <option value="'Lora', Georgia, serif">Lora</option>
         <option value="'Crimson Pro', Georgia, serif">Crimson Pro</option>
@@ -147,71 +150,95 @@ button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
         <option value="'Courier Prime', 'Courier New', monospace">Courier Prime</option>
       </optgroup>
     </select>
-    <select id="size" title="Font size" aria-label="Font size">
+    <div class="row"><select id="size" title="Font size" aria-label="Font size">
       <option value="15px">15</option><option value="17px">17</option>
       <option value="19px">19</option><option value="21px">21</option>
       <option value="23px">23</option><option value="26px">26</option>
-    </select>
-    <button id="spell" aria-pressed="false" title="Spellcheck can slow down very long drafts">Spellcheck</button>
+    </select><select id="lh" title="Line height" aria-label="Line height">
+      <option value="1.4">Tight</option><option value="1.6">Snug</option>
+      <option value="1.8">Normal</option><option value="2">Roomy</option>
+      <option value="2.2">Airy</option>
+    </select></div>
   </div>
-  <div class="group">
-    <button id="theme" aria-label="Switch theme">Dark</button>
-    <button id="download" title="Download as text file (Ctrl/Cmd+S)">Download .txt</button>
+  <div class="sec"><span class="lbl">Format</span>
+    <div class="row">
+      <button data-h="1" title="Heading 1 (Ctrl/Cmd+Alt+1)">H1</button>
+      <button data-h="2" title="Heading 2 (Ctrl/Cmd+Alt+2)">H2</button>
+      <button data-h="3" title="Heading 3 (Ctrl/Cmd+Alt+3)">H3</button>
+    </div>
+    <button id="brk" title="Insert a scene break">Scene break</button>
+  </div>
+  <div class="sec"><span class="lbl">Options</span>
+    <div class="row">
+      <button id="spell" aria-pressed="false" title="Browser spellcheck. Can slow down very long drafts.">Spellcheck</button>
+      <button id="theme" aria-label="Switch theme">Dark</button>
+    </div>
+  </div>
+  <div class="sec"><span class="lbl">File</span>
+    <div class="row">
+      <button id="open" title="Open a .md or .txt file (or drop one on the page)">Open</button>
+      <button id="download" title="Download as Markdown (Ctrl/Cmd+S)">Download .md</button>
+    </div>
+  </div>
+  <div id="status" role="status" aria-live="off">0 words</div>
+</div></aside>
+
+<div id="main">
+<button id="menu" aria-label="Toggle menu" aria-expanded="true" title="Menu (Ctrl/Cmd+B or Ctrl/Cmd+\)"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 5h12M3 9h12M3 13h12"/></svg></button>
+<div id="page">
+  <div id="stack">
+    <div id="mirror" aria-hidden="true"></div>
+    <textarea id="editor" placeholder="Start writing. Begin a line with # for a heading." spellcheck="false"
+      autocomplete="off" autocapitalize="sentences" aria-label="Writing area"></textarea>
   </div>
 </div>
-
-<div id="titlebar">
-  <input id="title" type="text" maxlength="120" autocomplete="off" spellcheck="false"
-    aria-label="Title" placeholder="Draft" title="Used as the file name. Leave it empty to save as Draft plus today's date.">
 </div>
-
-<div id="wrap">
-  <textarea id="editor" placeholder="Drafting the next chapter about Ryan..." spellcheck="false"
-    autocomplete="off" autocapitalize="sentences" aria-label="Writing area"></textarea>
-</div>
-<div id="status" role="status" aria-live="off">0 words</div>
+<input id="file" type="file" accept=".md,.markdown,.txt,text/plain,text/markdown" hidden>
 
 <script>
 (function () {
   'use strict';
 
-  var editor = document.getElementById('editor');
-  var titleEl = document.getElementById('title');
-  var statusEl = document.getElementById('status');
-  var fontSel = document.getElementById('font');
-  var sizeSel = document.getElementById('size');
-  var spellBtn = document.getElementById('spell');
-  var themeBtn = document.getElementById('theme');
+  var $ = function (id) { return document.getElementById(id); };
+  var editor = $('editor'), mirror = $('mirror'), page = $('page'), statusEl = $('status');
+  var fontSel = $('font'), sizeSel = $('size'), lhSel = $('lh');
+  var spellBtn = $('spell'), themeBtn = $('theme'), fileIn = $('file');
   var root = document.documentElement;
 
-  // ---------- small settings (localStorage is fine for tiny values) ----------
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
-  // ---------- dates and file names ----------
+  // ---------- title and file name: first heading, else Draft + date and time ----------
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
-  function todayStamp() {
+  function stamp() {
     var d = new Date();
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + '-' + pad(d.getMinutes());
   }
-  function defaultName() { return 'Draft ' + todayStamp(); }
   function cleanName(s) {
     return s
       .replace(/[\u0000-\u001f\u007f]/g, '')
       .replace(/[\\\/:*?"<>|]/g, '')
+      .replace(/[*_`~]/g, '')
       .replace(/\s+/g, ' ')
       .replace(/^[.\s]+|[.\s]+$/g, '')
       .slice(0, 80);
   }
-  function fileName() { return (cleanName(titleEl.value) || defaultName()) + '.txt'; }
-
-  // Placeholder shows exactly what the file will be called if the title stays empty.
-  function refreshPlaceholder() { titleEl.placeholder = defaultName(); }
-  refreshPlaceholder();
-
+  function headingTitle() {
+    var m = /^#{1,6}[ \t]+(.+?)[ \t]*#*[ \t]*$/m.exec(editor.value);
+    return m ? cleanName(m[1]) : '';
+  }
   function refreshDocTitle() {
-    var t = cleanName(titleEl.value);
+    var t = headingTitle();
     document.title = t ? t + ' | Focused Writer' : 'Focused Writer';
+  }
+
+  // ---------- coloring layer behind the textarea ----------
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function render() {
+    mirror.innerHTML = esc(editor.value)
+      .replace(/^(#{1,6})([ \t].*)?$/gm, '<span class="h"><span class="m">$1</span>$2</span>')
+      .replace(/^(?:-{3,}|\*{3,}|_{3,})[ \t]*$/gm, '<span class="m">$&</span>')
+      + '\u200b';
   }
 
   // ---------- theme ----------
@@ -222,51 +249,43 @@ button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
   }
   syncThemeButton();
   themeBtn.onclick = function () {
-    var on = root.classList.toggle('dark');
-    lsSet('writer-dark-mode', on);
+    lsSet('writer-dark-mode', root.classList.toggle('dark'));
     syncThemeButton();
   };
 
-  // ---------- font and size ----------
-  function applyFont(v) {
-    for (var i = 0; i < fontSel.options.length; i++) {
-      if (fontSel.options[i].value === v) { fontSel.value = v; root.style.setProperty('--font', v); return true; }
+  // ---------- font, size, line height ----------
+  function bindSelect(sel, key, cssVar, fallback) {
+    function apply(v) {
+      for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === v) { sel.value = v; root.style.setProperty(cssVar, v); return true; }
+      }
+      return false;
     }
-    return false;
+    if (!apply(lsGet(key))) apply(fallback);
+    sel.onchange = function () { apply(sel.value); lsSet(key, sel.value); editor.focus(); };
   }
-  function applySize(v) {
-    for (var i = 0; i < sizeSel.options.length; i++) {
-      if (sizeSel.options[i].value === v) { sizeSel.value = v; root.style.setProperty('--size', v); return true; }
-    }
-    return false;
-  }
-  // Old saved values (fonts that no longer exist) quietly fall back to the defaults.
-  if (!applyFont(lsGet('writer-font'))) applyFont(fontSel.options[0].value);
-  if (!applySize(lsGet('writer-font-size'))) applySize('19px');
-  fontSel.onchange = function () { applyFont(fontSel.value); lsSet('writer-font', fontSel.value); editor.focus(); };
-  sizeSel.onchange = function () { applySize(sizeSel.value); lsSet('writer-font-size', sizeSel.value); editor.focus(); };
+  bindSelect(fontSel, 'writer-font', '--font', fontSel.options[0].value);
+  bindSelect(sizeSel, 'writer-font-size', '--size', '19px');
+  bindSelect(lhSel, 'writer-line-height', '--lh', '1.8');
 
   function setSpell(on) {
     editor.spellcheck = on;
-    titleEl.spellcheck = on;
     spellBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     lsSet('writer-spellcheck', on);
   }
   setSpell(lsGet('writer-spellcheck') === 'true');
   spellBtn.onclick = function () { setSpell(editor.spellcheck !== true); editor.focus(); };
 
-  // ---------- storage: IndexedDB (async, large quota) with localStorage backup ----------
+  // ---------- storage: IndexedDB with a localStorage backup ----------
   var DB_NAME = 'focused-writer', STORE = 'kv', KEY = 'draft';
   var dbPromise = new Promise(function (resolve) {
     try {
       var req = indexedDB.open(DB_NAME, 1);
       req.onupgradeneeded = function () { req.result.createObjectStore(STORE); };
       req.onsuccess = function () { resolve(req.result); };
-      req.onerror = function () { resolve(null); };
-      req.onblocked = function () { resolve(null); };
+      req.onerror = req.onblocked = function () { resolve(null); };
     } catch (e) { resolve(null); }
   });
-
   function idbGet() {
     return dbPromise.then(function (db) {
       if (!db) return null;
@@ -292,18 +311,13 @@ button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
       });
     });
   }
-
-  // Oldest version stored HTML in localStorage. Convert it to plain text once, without running any of it.
   function legacyToText(html) {
-    var s = html
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/(div|p|h[1-6]|li)>/gi, '\n')
+    var s = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(div|p|h[1-6]|li)>/gi, '\n')
       .replace(/<(div|p|h[1-6]|li)[^>]*>/gi, '');
     var doc = new DOMParser().parseFromString(s, 'text/html');
     return (doc.body.textContent || '').replace(/\u00a0/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
   }
-
-  // Returns { text, title }. Drafts saved before titles existed just come back with an empty title.
+  // Drafts saved with the old separate title get it as a first heading, so nothing is lost.
   function loadDraft() {
     return idbGet().then(function (rec) {
       var backup = null;
@@ -311,126 +325,209 @@ button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent);
       var best = rec;
       if (backup && typeof backup.text === 'string' && (!best || backup.t > best.t)) best = backup;
       if (best && typeof best.text === 'string') {
-        return { text: best.text, title: typeof best.title === 'string' ? best.title : '' };
+        var t = best.text, old = typeof best.title === 'string' ? best.title.trim() : '';
+        if (old && !/^#{1,6}[ \t]/m.test(t)) t = '# ' + old + '\n\n' + t;
+        return t;
       }
       var legacy = lsGet('writer-content');
-      if (legacy) return { text: legacyToText(legacy), title: '' };
-      return { text: '', title: '' };
+      return legacy ? legacyToText(legacy) : '';
     });
   }
 
-  // ---------- saving: debounced, never on every keystroke ----------
+  // ---------- saving: debounced ----------
   var dirty = false, saveTimer = 0, firstDirtyAt = 0, loaded = false;
   var SAVE_IDLE = 600, SAVE_MAX = 5000;
-
-  function snapshot() { return { text: editor.value, title: titleEl.value, t: Date.now() }; }
 
   function flushNow() {
     if (!loaded || !dirty) return;
     clearTimeout(saveTimer); saveTimer = 0;
-    var snap = snapshot();
+    var snap = { text: editor.value, t: Date.now() };
     dirty = false; firstDirtyAt = 0;
-    // Synchronous backup so closing the tab never loses text.
-    try { localStorage.setItem('writer-text-backup', JSON.stringify(snap)); } catch (e) {}
-    idbSet(snap).then(function () {
-      if (!dirty) setStatusSaved();
+    var lsOk = true;
+    try { localStorage.setItem('writer-text-backup', JSON.stringify(snap)); } catch (e) { lsOk = false; }
+    idbSet(snap).then(function (ok) {
+      saveFailed = !ok && !lsOk;
+      if (!dirty) savedLabel = true;
+      renderStatus();
     });
   }
-
   function scheduleSave() {
     dirty = true;
     var now = Date.now();
     if (!firstDirtyAt) firstDirtyAt = now;
     clearTimeout(saveTimer);
-    var wait = Math.min(SAVE_IDLE, Math.max(0, SAVE_MAX - (now - firstDirtyAt)));
-    saveTimer = setTimeout(flushNow, wait);
+    saveTimer = setTimeout(flushNow, Math.min(SAVE_IDLE, Math.max(0, SAVE_MAX - (now - firstDirtyAt))));
   }
 
-  // ---------- word count: one pass, no arrays, deferred until idle ----------
-  var wordTimer = 0, savedLabel = true, lastWords = 0;
+  // ---------- word count ----------
+  var wordTimer = 0, savedLabel = true, lastWords = 0, lastChars = 0, saveFailed = false, otherTab = false;
   function countWords(s) {
     var n = 0, inWord = false;
     for (var i = 0, len = s.length; i < len; i++) {
       var c = s.charCodeAt(i);
       var space = c <= 32 || c === 160 || (c >= 0x2000 && c <= 0x200a) || c === 0x2028 || c === 0x2029 || c === 0x3000;
-      if (space) inWord = false;
-      else if (!inWord) { inWord = true; n++; }
+      if (space) inWord = false; else if (!inWord) { inWord = true; n++; }
     }
     return n;
   }
   function renderStatus() {
-    statusEl.textContent = lastWords.toLocaleString() + (lastWords === 1 ? ' word' : ' words') + (savedLabel ? '' : ' (unsaved)');
+    var note = otherTab ? 'Open in another tab too. Edits can overwrite each other.'
+      : saveFailed ? 'Could not save in this browser. Download a copy.'
+      : savedLabel ? 'Saved' : 'Saving...';
+    statusEl.textContent = lastWords.toLocaleString() + (lastWords === 1 ? ' word, ' : ' words, ') + lastChars.toLocaleString() + ' chr\n' + note;
   }
-  function setStatusSaved() { savedLabel = true; renderStatus(); }
-  function scheduleCount() {
+  var rq = 0;
+  function scheduleRender() {
+    if (rq) return;
+    rq = requestAnimationFrame(function () { rq = 0; render(); revealCaret(); });
+  }
+  // The textarea never scrolls itself (the page does), so keep the caret in view by hand.
+  function revealCaret() {
+    if (document.activeElement !== editor) return;
+    var idx = editor.selectionEnd, w = document.createTreeWalker(mirror, NodeFilter.SHOW_TEXT);
+    var n, last = null, node = null, off = 0;
+    while ((n = w.nextNode())) {
+      last = n;
+      if (idx < n.length) { node = n; off = idx; break; }
+      idx -= n.length;
+    }
+    if (!node && last) { node = last; off = last.length; }
+    if (!node) return;
+    var r = document.createRange(); r.setStart(node, off); r.collapse(true);
+    var rect = r.getClientRects()[0] || r.getBoundingClientRect();
+    if (!rect || (!rect.height && !rect.top)) return;
+    var pr = page.getBoundingClientRect();
+    if (rect.bottom > pr.bottom - 120) page.scrollTop += rect.bottom - (pr.bottom - 120);
+    else if (rect.top < pr.top + 56) page.scrollTop -= (pr.top + 56) - rect.top;
+  }
+  editor.addEventListener('keyup', function (e) { if (/^(Arrow|Page|Home|End)/.test(e.key)) revealCaret(); });
+  // Another tab saving over the same draft is the one real way to lose text, so say so.
+  window.addEventListener('storage', function (e) {
+    if (e.key === 'writer-text-backup' && loaded) { otherTab = true; renderStatus(); }
+  });
+
+  function onChange() {
+    scheduleRender();
+    savedLabel = false;
+    scheduleSave();
     clearTimeout(wordTimer);
-    wordTimer = setTimeout(function () {
-      lastWords = countWords(editor.value);
-      renderStatus();
-    }, 300);
+    wordTimer = setTimeout(function () { lastWords = countWords(editor.value); lastChars = editor.value.length; renderStatus(); refreshDocTitle(); }, 300);
   }
+  editor.addEventListener('input', onChange);
 
-  editor.addEventListener('input', function () {
-    savedLabel = false;
-    scheduleSave();
-    scheduleCount();
-  });
-  titleEl.addEventListener('input', function () {
-    savedLabel = false;
-    refreshDocTitle();
-    renderStatus();
-    scheduleSave();
-  });
-  // Enter in the title jumps straight into the draft.
-  titleEl.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') { e.preventDefault(); editor.focus(); }
-  });
-
-  // Save when leaving. visibilitychange is the reliable one on mobile.
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') flushNow();
-    else refreshPlaceholder();
-  });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushNow(); });
   window.addEventListener('pagehide', flushNow);
 
-  // ---------- download ----------
+  // ---------- headings and scene break ----------
+  // execCommand keeps Ctrl+Z working; setRangeText is the fallback.
+  function replaceRange(a, b, text) {
+    editor.focus();
+    editor.setSelectionRange(a, b);
+    var ok = false;
+    try { ok = document.execCommand('insertText', false, text); } catch (e) {}
+    if (!ok) { editor.setRangeText(text, a, b, 'end'); onChange(); }
+  }
+  function lineStart(v, s) { return s > 0 ? v.lastIndexOf('\n', s - 1) + 1 : 0; }
+  function setHeading(level) {
+    var v = editor.value, s = editor.selectionStart, e = editor.selectionEnd;
+    if (e > s && v.charAt(e - 1) === '\n') e--;
+    var a = lineStart(v, s);
+    var b = v.indexOf('\n', e); if (b < 0) b = v.length;
+    var out = v.slice(a, b).split('\n').map(function (line) {
+      var m = /^(#{1,6})[ \t]+/.exec(line);
+      var body = line.replace(/^#{1,6}[ \t]+/, '');
+      return (m && m[1].length === level) ? body : '#'.repeat(level) + ' ' + body;
+    }).join('\n');
+    replaceRange(a, b, out);
+    editor.setSelectionRange(a + out.length, a + out.length);
+  }
+  function sceneBreak() {
+    var v = editor.value, s = editor.selectionStart;
+    var a = lineStart(v, s);
+    var b = v.indexOf('\n', s); if (b < 0) b = v.length;
+    var empty = v.slice(a, b).trim() === '';
+    replaceRange(b, b, (empty ? '' : '\n\n') + '---\n\n');
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('[data-h]'), function (btn) {
+    btn.onmousedown = function (e) { e.preventDefault(); };   // keep the caret in the text
+    btn.onclick = function () { setHeading(+btn.getAttribute('data-h')); };
+  });
+  $('brk').onmousedown = function (e) { e.preventDefault(); };
+  $('brk').onclick = sceneBreak;
+
+  // ---------- download and open ----------
   function download() {
-    var title = titleEl.value.trim();
-    var body = title ? title + '\n\n' + editor.value : editor.value;
-    var blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
+    var name = (headingTitle() || 'Draft ' + stamp()) + '.md';
+    var blob = new Blob([editor.value], { type: 'text/markdown;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
-    a.href = url; a.download = fileName();
+    a.href = url; a.download = name;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
   }
-  document.getElementById('download').onclick = download;
-  document.addEventListener('keydown', function (e) {
-    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); flushNow(); download(); }
+  $('download').onclick = download;
+
+  function openFile(file) {
+    if (!file) return;
+    if (!/\.(md|markdown|txt)$/i.test(file.name) && !/^text\//.test(file.type)) { alert('Only .md and .txt files can be opened.'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert('That file is over 5 MB, so it was not opened.'); return; }
+    file.text().then(function (t) {
+      t = t.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
+      if (t.indexOf('\u0000') >= 0) { alert('That file does not look like plain text.'); return; }
+      if (editor.value.trim() &&
+          !confirm('Replace your current draft with "' + file.name + '"?\n\nCtrl/Cmd+Z right after should bring it back, but downloading a copy first is safer.')) return;
+      replaceRange(0, editor.value.length, t);   // goes through the editor's undo history
+      requestAnimationFrame(function () { page.scrollTop = page.scrollHeight; });
+    }).catch(function () { alert('Could not read that file.'); });
+  }
+  $('open').onclick = function () { fileIn.click(); };
+  fileIn.onchange = function () { openFile(fileIn.files[0]); fileIn.value = ''; };
+
+  function hasFiles(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
+  document.addEventListener('dragover', function (e) { if (hasFiles(e)) { e.preventDefault(); document.body.classList.add('drop'); } });
+  document.addEventListener('dragleave', function (e) { if (!e.relatedTarget) document.body.classList.remove('drop'); });
+  document.addEventListener('drop', function (e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); document.body.classList.remove('drop');
+    openFile(e.dataTransfer.files[0]);
   });
+
+  document.addEventListener('keydown', function (e) {
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && !e.altKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); flushNow(); download(); }
+    else if (mod && !e.altKey && !e.shiftKey && ((e.key && e.key.toLowerCase() === 'b') || e.code === 'Backslash')) { e.preventDefault(); toggleSide(); }
+    else if (mod && e.altKey && /^Digit[123]$/.test(e.code)) { e.preventDefault(); setHeading(+e.code.slice(5)); }
+  });
+
+  // ---------- side menu ----------
+  var menuBtn = $('menu');
+  function syncMenu() { menuBtn.setAttribute('aria-expanded', root.classList.contains('nside') ? 'false' : 'true'); }
+  function toggleSide() {
+    var closed = root.classList.toggle('nside');
+    lsSet('writer-side', closed ? 'closed' : 'open');
+    syncMenu();
+    if (closed) editor.focus();
+  }
+  syncMenu();
+  menuBtn.onmousedown = function (e) { e.preventDefault(); };
+  menuBtn.onclick = toggleSide;
 
   // ---------- startup ----------
   editor.disabled = true;
-  titleEl.disabled = true;
-  loadDraft().then(function (draft) {
-    var text = draft.text;
+  loadDraft().then(function (text) {
     editor.value = text;
-    titleEl.value = draft.title;
     editor.disabled = false;
-    titleEl.disabled = false;
     loaded = true;
-    lastWords = countWords(text);
-    savedLabel = true;
+    render();
+    lastWords = countWords(text); lastChars = text.length;
     renderStatus();
     refreshDocTitle();
     editor.focus();
     editor.setSelectionRange(text.length, text.length);
-    editor.scrollTop = editor.scrollHeight;
-    // If we pulled in an old draft, save it in the new format right away.
+    page.scrollTop = page.scrollHeight;
     if (text && !lsGet('writer-text-backup')) { dirty = true; flushNow(); }
   });
 
-  // Ask the browser not to evict saved drafts under storage pressure.
   if (navigator.storage && navigator.storage.persist) { try { navigator.storage.persist(); } catch (e) {} }
 })();
 </script>
